@@ -18,6 +18,7 @@ public class BaseFragment extends Fragment {
     public MaterialDialog ShowMessage(String title, String message) {
         return activity.ShowMessage(title, message);
     }
+
     public MaterialDialog ShowConfirmationDialog(String title, String message, String posText, String negText
             , MaterialDialog.SingleButtonCallback pos, MaterialDialog.SingleButtonCallback neg){
         return activity.ShowConfirmationDialog(title,message,posText,negText,

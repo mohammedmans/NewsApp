@@ -22,20 +22,6 @@ public class BaseActivity extends AppCompatActivity {
         MaterialDialog dialog = new MaterialDialog.Builder(this)
                 .title(title)
                 .content(message)
-                /*.positiveText("yes")
-                .negativeText("No")
-                .onNegative(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        dialog.dismiss();
-                    }
-                })
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        finish();
-                    }
-                })*/
                 .show();
 
         return dialog;
@@ -48,8 +34,8 @@ public class BaseActivity extends AppCompatActivity {
                 .content(message)
                 .positiveText(posText)
                 .negativeText(negText)
-                .onNegative(pos)
-                .onPositive(neg)
+                .onNegative(neg)
+                .onPositive(pos)
                 .show();
 
         return dialog;

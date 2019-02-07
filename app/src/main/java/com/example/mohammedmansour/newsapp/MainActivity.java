@@ -3,16 +3,21 @@ package com.example.mohammedmansour.newsapp;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.example.mohammedmansour.newsapp.API.APIManager;
 import com.example.mohammedmansour.newsapp.API.APIs;
 import com.example.mohammedmansour.newsapp.API.Responses.Everything.ArticlesItem;
@@ -30,11 +35,12 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends BaseActivity {
-    private static String apiKey = "b6c9953f1488488b9f4441da294f9e0f";
+
     TabLayout tabLayout;
     LinearLayoutManager layoutManager;
     NewsAdapter newsAdapter;
     RecyclerView recyclerView;
+    NewsRepository newsRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,76 +52,66 @@ public class MainActivity extends BaseActivity {
         setSupportActionBar(toolbar);
         layoutManager = new LinearLayoutManager(this);
         newsAdapter = new NewsAdapter(null, this);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(newsAdapter);
+        newsRepository = new NewsRepository(activity);
+        getNewsSources();
         newsAdapter.setOnNewsClickListener(new NewsAdapter.OnNewsClickListener() {
             @Override
             public void onNewsClick(int position, ArticlesItem articlesItem) {
                 Intent intent = new Intent(MainActivity.this, NewsWholeContentActivity.class);
-                intent.putExtra("newsContentTitle",articlesItem.getTitle());
-                intent.putExtra("newsContentDate",articlesItem.getPublishedAt());
-                intent.putExtra("newsContentDesc",articlesItem.getDescription());
-                intent.putExtra("newsContent",articlesItem.getContent());
-                intent.putExtra("newsContentURL",articlesItem.getUrl());
-                intent.putExtra("activityLabel",articlesItem.getSource().getName());
-                //Log.e("newsContent",articlesItem.getContent());
-                //Log.e("newsDesc",articlesItem.getDescription());
-                intent.putExtra("newsContentImg",articlesItem.getUrlToImage());
+                intent.putExtra("newsItem", articlesItem);
+                intent.putExtra("newsItemSource", articlesItem.getSource());
+                //intent.putExtra("newsLabel",articlesItem.getSource().getName());
+                //Log.e("imageurl",articlesItem.getUrlToImage());
                 startActivity(intent);
             }
         });
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setAdapter(newsAdapter);
-        getNeswSources();
+
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        setContentView(R.layout.activity_main);
-    }
 
-    public void getNeswSources() {
+//    @Override
+//    public void onConfigurationChanged(Configuration newConfig) {
+//        super.onConfigurationChanged(newConfig);
+//        setContentView(R.layout.activity_main);
+//    }
+
+    public void getNewsSources() {
         ShowProgressBar();
-        APIManager.getAPIs().getSourceName(apiKey, "en")
-                .enqueue(new Callback<SourceResponse>() {
-                    @Override
-                    public void onResponse(Call<SourceResponse> call, Response<SourceResponse> response) {
-                        HideProgressBar();
-                        if (response.body().getStatus().equals("ok")) {
-                            fillTabLayout(response.body().getSources());
-
-                        } else {
-                            ShowMessage(getString(R.string.error), response.body().getMessage());
+        // when data is ready there in repositroy class  back to activity through callback, so that returned sourcesItems below
+        // even if data get from web or DB
+        newsRepository.getSources(new NewsRepository.OnSourcesPreparedListener() {
+            @Override
+            public void sourcesPreparedListener(final List<SourcesItem> sourcesItems) {
+                HideProgressBar();
+                if (sourcesItems != null)
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            fillTabLayout(sourcesItems);
                         }
-                    }
+                    });
 
-                    @Override
-                    public void onFailure(Call<SourceResponse> call, Throwable t) {
-                        ShowMessage(getString(R.string.error), t.getLocalizedMessage());
-                        HideProgressBar();
-                    }
-                });
+            }
+        });
     }
 
     public void getNews(String sourceID) {
         ShowProgressBar();
-        APIManager.getAPIs().getEverythingRespone(apiKey, sourceID)
-                .enqueue(new Callback<EverythingResponse>() {
+        newsRepository.getArticles(sourceID, new NewsRepository.OnArticlesPreparesListener() {
+            @Override
+            public void articlesPreparedListener(final List<ArticlesItem> articlesItems) {
+                HideProgressBar();
+                runOnUiThread(new Runnable() {
                     @Override
-                    public void onResponse(Call<EverythingResponse> call, Response<EverythingResponse> response) {
-                        HideProgressBar();
-                        if (response.body().getStatus().equals("ok")) {
-                            newsAdapter.setUpdateddData(response.body().getArticles());
-                        } else {
-                            ShowMessage(getString(R.string.error), response.body().getMessages());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<EverythingResponse> call, Throwable t) {
-                        HideProgressBar();
-                        ShowMessage(getString(R.string.error), t.getLocalizedMessage());
+                    public void run() {
+                        newsAdapter.setUpdateddData(articlesItems);
                     }
                 });
+
+            }
+        });
     }
 
     public void fillTabLayout(final List<SourcesItem> sourcesItems) {
@@ -128,6 +124,8 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 getNews(sourcesItems.get(tab.getPosition()).getId());
+                recyclerView.smoothScrollToPosition(0);
+                //getSupportActionBar().show();
             }
 
             @Override
@@ -138,6 +136,9 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
                 getNews(sourcesItems.get(tab.getPosition()).getId());
+                recyclerView.smoothScrollToPosition(0);
+                //getSupportActionBar().show();
+
             }
         });
         tabLayout.getTabAt(0).select();

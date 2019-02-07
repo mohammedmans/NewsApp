@@ -20,9 +20,8 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.CustomViewHold
     Context context;
     OnNewsClickListener onNewsClickListener;
 
-    public OnNewsClickListener getOnNewsClickListener() {
-        return onNewsClickListener;
-    }
+
+
 
     public void setOnNewsClickListener(OnNewsClickListener onNewsClickListener) {
         this.onNewsClickListener = onNewsClickListener;
@@ -56,14 +55,16 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.CustomViewHold
         customViewHolder.title.setText(articlesItem.getTitle());
         customViewHolder.desc.setText(articlesItem.getDescription());
         customViewHolder.date.setText(articlesItem.getPublishedAt());
+
         customViewHolder.parent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (onNewsClickListener != null) {
+
                     onNewsClickListener.onNewsClick(i,articlesItem);
-                }
+
             }
         });
+
         Glide.with(context).load(articlesItem.getUrlToImage())
                 .into(customViewHolder.image);
     }
@@ -98,4 +99,5 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.CustomViewHold
     public interface OnNewsClickListener {
         void onNewsClick(int position, ArticlesItem articlesItem);
     }
+
 }

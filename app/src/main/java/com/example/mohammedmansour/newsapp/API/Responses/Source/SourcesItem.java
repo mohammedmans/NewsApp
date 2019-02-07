@@ -1,9 +1,13 @@
 package com.example.mohammedmansour.newsapp.API.Responses.Source;
 
 
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
-
+@Entity
 public class SourcesItem{
 
 	@SerializedName("country")
@@ -18,6 +22,8 @@ public class SourcesItem{
 	@SerializedName("language")
 	private String language;
 
+	@PrimaryKey
+	@NonNull
 	@SerializedName("id")
 	private String id;
 
